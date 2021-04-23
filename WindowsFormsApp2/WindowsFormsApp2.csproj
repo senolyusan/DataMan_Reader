@@ -41,6 +41,7 @@
     <Reference Include="Cognex.DataMan.SDK.PC">
       <HintPath>..\..\..\..\Cognex\DataMan SDK 5.0.8.0\Binaries\PC\Cognex.DataMan.SDK.PC.dll</HintPath>
     </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
