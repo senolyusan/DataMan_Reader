@@ -23,7 +23,7 @@ namespace WindowsFormsApp2
         /// 获取扫描枪委托
         /// </summary>
         /// <param name="obj">扫描枪信息</param>
-        public delegate void _getScanner(object obj);
+        public delegate void _getScanner(List<SerSystemDiscoverer.SystemInfo> obj);
         /// <summary>
         /// 获取扫描结果委托
         /// </summary>
@@ -100,6 +100,7 @@ namespace WindowsFormsApp2
         {
             if(dataManSystem == null && serSystemDiscoverer !=null)
             {
+                systemInfos.Clear();
                 serSystemDiscoverer.Discover();
             }
         }
@@ -115,10 +116,16 @@ namespace WindowsFormsApp2
         /// 扫描枪下拉列表
         /// </summary>
         /// <param name="obj"></param>
-        public void ComBoBoxaddListItem(object obj)
+        public void ComBoBoxaddListItem(List<SerSystemDiscoverer.SystemInfo> obj)
         {
+            ComboBox.ObjectCollection objectCollection = comboBox1.Items;
             
-            comboBox1.Items.Add(obj);
+                obj.ForEach(o => {
+                    if (!objectCollection.Contains(o.PortName)) 
+                    {
+                        comboBox1.Items.Add(o.PortName);
+                    };
+                });
         }
         /// <summary>
         /// 接收结果视图更新
@@ -177,8 +184,12 @@ namespace WindowsFormsApp2
         /// <param name="systemInfo"></param>
         private void SerSystemDiscoverer_SystemDiscovered(SerSystemDiscoverer.SystemInfo systemInfo)
         {
-            systemInfos.Add(systemInfo);
-            this.Invoke(GetScanner, systemInfo);
+            if (!systemInfos.Contains(systemInfo))
+            {
+                systemInfos.Add(systemInfo);
+                this.Invoke(GetScanner, systemInfos);
+                this.OnFreshScannerList();
+            }
         }
         /// <summary>
         /// 扫码枪列表框选择项更改
@@ -248,6 +259,9 @@ namespace WindowsFormsApp2
 
         private void DataManSystem_SystemDisconnected(object sender, EventArgs args)
         {
+            dataManSystem.Disconnect();
+            dataManSystem.Dispose();
+            dataManSystem = null;
             this.OnFreshScannerList();
         }
 
@@ -282,6 +296,7 @@ namespace WindowsFormsApp2
                     {
                         if (  ignoreAll || MessageBox.Show("发现冲突数据，是否继续？\n继续将会忽略冲突数据！！","警告",MessageBoxButtons.YesNo,MessageBoxIcon.Warning,MessageBoxDefaultButton.Button2) == DialogResult.Yes)
                         {
+                            ignoreAll = true;
                             continue;
                         }
                         else
