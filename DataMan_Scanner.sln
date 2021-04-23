@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30907.101
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WindowsFormsApp2", "WindowsFormsApp2\WindowsFormsApp2.csproj", "{6EBBDAC9-F507-40CF-861B-1228FA7735E2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataMan_Scanner", "WindowsFormsApp2\DataMan_Scanner.csproj", "{6EBBDAC9-F507-40CF-861B-1228FA7735E2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

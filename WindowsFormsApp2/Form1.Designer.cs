@@ -1,5 +1,5 @@
 ﻿
-namespace WindowsFormsApp2
+namespace DataMan_Scanner
 {
     partial class Form1
     {
@@ -155,8 +155,9 @@ namespace WindowsFormsApp2
             this.Controls.Add(this.label1);
             this.Controls.Add(this.comboBox1);
             this.Controls.Add(this.pic_OK);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "Form1";
-            this.Text = "Form1";
+            this.Text = "扫码校验";
             this.Load += new System.EventHandler(this.Form1_Load);
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView1)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.pic_NG)).EndInit();

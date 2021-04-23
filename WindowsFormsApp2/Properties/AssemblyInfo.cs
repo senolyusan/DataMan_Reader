@@ -5,11 +5,11 @@ using System.Runtime.InteropServices;
 // 有关程序集的一般信息由以下
 // 控制。更改这些特性值可修改
 // 与程序集关联的信息。
-[assembly: AssemblyTitle("WindowsFormsApp2")]
+[assembly: AssemblyTitle("DataMan_Scanner")]
 [assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Microsoft")]
-[assembly: AssemblyProduct("WindowsFormsApp2")]
+[assembly: AssemblyProduct("DataMan_Scanner")]
 [assembly: AssemblyCopyright("Copyright © Microsoft 2021")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]

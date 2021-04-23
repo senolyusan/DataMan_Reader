@@ -11,7 +11,7 @@ using SerialPort = System.IO.Ports.SerialPort;
 using Cognex.DataMan.SDK;
 using Cognex.DataMan.Discovery;
 
-namespace WindowsFormsApp2
+namespace DataMan_Scanner
 {
     public partial class Form1 : Form
     {
@@ -34,8 +34,12 @@ namespace WindowsFormsApp2
         /// </summary>
         /// <param name="text"></param>
         public delegate void _setText(String text);
-
+        /// <summary>
+        /// 显示报警图片
+        /// </summary>
+        /// <param name="flag"></param>
         public delegate void _displayAlert(Boolean flag);
+
         private  _getScanner GetScanner;
         private _getData GetData;
         private _setText SetText;
@@ -49,6 +53,7 @@ namespace WindowsFormsApp2
         public delegate void _discoverScanner();
         private _discoverScanner DiscoverScanner;
         SerSystemDiscoverer serSystemDiscoverer =null;
+
         protected virtual void OnFreshScannerList()
         {
             FreshScannerList eventHandler = FreshEvent;
@@ -66,6 +71,10 @@ namespace WindowsFormsApp2
             DisplayAlert = new _displayAlert(displayAlert);
             DiscoverScanner = new _discoverScanner(discoverScanner);
         }
+        /// <summary>
+        /// 重复扫码报警处理函数
+        /// </summary>
+        /// <param name="flag"></param>
         private void displayAlert(Boolean flag)
         {
             if (flag) 
@@ -94,8 +103,12 @@ namespace WindowsFormsApp2
             timer1.Tick += Timer1_Tick;
             timer1.Enabled = true;
             timer1.Start();
+            this.Invoke(DiscoverScanner);
 
         }
+        /// <summary>
+        /// 扫码枪发现处理函数
+        /// </summary>
         private void discoverScanner()
         {
             if(dataManSystem == null && serSystemDiscoverer !=null)
@@ -254,6 +267,7 @@ namespace WindowsFormsApp2
                 dataManSystem.SystemDisconnected += DataManSystem_SystemDisconnected;
             }
             dataManSystem.Connect();
+            this.Text = $"扫码校验【{serSystemConnector.PortName},{serSystemConnector.Baudrate},{serSystemConnector.Parity},{serSystemConnector.DataBits},{serSystemConnector.StopBits}】";
             
         }
 
@@ -262,6 +276,7 @@ namespace WindowsFormsApp2
             dataManSystem.Disconnect();
             dataManSystem.Dispose();
             dataManSystem = null;
+            this.Text = $"扫码校验";
             this.OnFreshScannerList();
         }
 
