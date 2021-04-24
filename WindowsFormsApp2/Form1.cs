@@ -1,4 +1,5 @@
-﻿using System;
+﻿
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -10,11 +11,14 @@ using Ports = System.IO.Ports;
 using SerialPort = System.IO.Ports.SerialPort;
 using Cognex.DataMan.SDK;
 using Cognex.DataMan.Discovery;
+using System.Windows.Forms;
 
 namespace DataMan_Scanner
 {
+    
     public partial class Form1 : Form
     {
+        private const int WM_DEVICECHANGE= 0x0219;
         /// <summary>
         /// 扫描枪信息集合
         /// </summary>
@@ -39,7 +43,9 @@ namespace DataMan_Scanner
         /// </summary>
         /// <param name="flag"></param>
         public delegate void _displayAlert(Boolean flag);
+        public delegate void _setFormTitle(string formTitle);
 
+        private _setFormTitle SetFormTitle;
         private  _getScanner GetScanner;
         private _getData GetData;
         private _setText SetText;
@@ -53,7 +59,8 @@ namespace DataMan_Scanner
         public delegate void _discoverScanner();
         private _discoverScanner DiscoverScanner;
         SerSystemDiscoverer serSystemDiscoverer =null;
-
+        bool AutoLoad = false;
+        List<String> autoLoadDevices = new List<string>();
         protected virtual void OnFreshScannerList()
         {
             FreshScannerList eventHandler = FreshEvent;
@@ -70,6 +77,7 @@ namespace DataMan_Scanner
             SetText = new _setText(TextBoxSetText);
             DisplayAlert = new _displayAlert(displayAlert);
             DiscoverScanner = new _discoverScanner(discoverScanner);
+            SetFormTitle = new _setFormTitle(setFormTitle);
         }
         /// <summary>
         /// 重复扫码报警处理函数
@@ -80,8 +88,15 @@ namespace DataMan_Scanner
             if (flag) 
             { 
                 this.pic_NG.Visible = true;
-                this.pic_OK.Visible = false;                 
-                dataManSystem.SendCommand("OUTPUT.DATAVALID-FAIL");
+                this.pic_OK.Visible = false;
+                try
+                {
+                    dataManSystem.SendCommand("OUTPUT.DATAVALID-FAIL", 100);
+                }
+                catch (Exception)
+                {
+
+                }
             }
             else
             {                
@@ -89,6 +104,10 @@ namespace DataMan_Scanner
                 this.pic_OK.Visible = true;
             }
 
+        }
+        private void setFormTitle(string title)
+        {
+            this.Text = title;
         }
         private void Form1_Load(object sender, EventArgs e)
         {
@@ -102,9 +121,17 @@ namespace DataMan_Scanner
             timer1.Interval = 1000;
             timer1.Tick += Timer1_Tick;
             timer1.Enabled = true;
+            MessageBox.Show("使用时必须指定【存储文件】的路径！");
             timer1.Start();
             this.Invoke(DiscoverScanner);
+            if(Boolean.TryParse(Properties.Settings.Default.Properties["AutoLoad"].DefaultValue.ToString(), out this.AutoLoad))
+            {
+                if (this.AutoLoad)
+                {
 
+                }
+            }
+            
         }
         /// <summary>
         /// 扫码枪发现处理函数
@@ -123,8 +150,34 @@ namespace DataMan_Scanner
             {
                 this.Invoke(DiscoverScanner);
             }
+            else
+            {
+                try
+                {
+                    this.timer1.Stop();
+                    DmccResponse dmccResponse = dataManSystem.SendCommand("GET DEVICE.NAME",1000);
+                }                
+                catch(Exception ex)
+                {   
+                    dataManSystem.Disconnect();
+                    dataManSystem = null;
+                    this.comboBox1.Items.Clear();
+                    systemInfos.Clear();
+                }
+                this.timer1.Start();
+            }
         }
 
+
+        protected override void WndProc(ref Message m)
+        {
+            if(m.Msg ==WM_DEVICECHANGE)
+            {
+                ;
+                ;
+            }
+            base.WndProc(ref m);
+        }
         /// <summary>
         /// 扫描枪下拉列表
         /// </summary>
@@ -197,11 +250,18 @@ namespace DataMan_Scanner
         /// <param name="systemInfo"></param>
         private void SerSystemDiscoverer_SystemDiscovered(SerSystemDiscoverer.SystemInfo systemInfo)
         {
-            if (!systemInfos.Contains(systemInfo))
+            if (this.AutoLoad)
             {
-                systemInfos.Add(systemInfo);
-                this.Invoke(GetScanner, systemInfos);
-                this.OnFreshScannerList();
+                selectScanner(systemInfo.PortName);
+            }
+            else
+            {
+                if (!systemInfos.Contains(systemInfo))
+                {
+                    systemInfos.Add(systemInfo);
+                    this.Invoke(GetScanner, systemInfos);
+                    this.OnFreshScannerList();
+                }
             }
         }
         /// <summary>
@@ -211,15 +271,20 @@ namespace DataMan_Scanner
         /// <param name="e"></param>
         private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if(serSystemConnector != null || dataManSystem != null)
-            { 
-                if(dataManSystem == null)
+            selectScanner(comboBox1.SelectedItem.ToString());
+        }
+        private void selectScanner(string scanner)
+        {
+
+            if (serSystemConnector != null || dataManSystem != null)
+            {
+                if (dataManSystem == null)
                 {
                     serSystemConnector.Disconnect();
                     serSystemConnector.Dispose();
                     serSystemConnector = null;
                 }
-                else if(serSystemConnector == null)
+                else if (serSystemConnector == null)
                 {
                     dataManSystem.Disconnect();
                     dataManSystem.Dispose();
@@ -227,7 +292,8 @@ namespace DataMan_Scanner
                 }
                 else
                 {
-                    try {
+                    try
+                    {
                         dataManSystem.ReadStringArrived -= DataManSystem_ReadStringArrived;
                     }
                     catch
@@ -235,16 +301,14 @@ namespace DataMan_Scanner
 
                     }
                     dataManSystem.Disconnect();
-                    dataManSystem.Dispose();
                     dataManSystem = null;
                     serSystemConnector.Disconnect();
-                    serSystemConnector.Dispose();
                     serSystemConnector = null;
                 }
             }
             try
             {
-                serSystemConnector = new SerSystemConnector(comboBox1.SelectedItem.ToString());
+                serSystemConnector = new SerSystemConnector(scanner);
                 dataManSystem = new DataManSystem(serSystemConnector);
             }
             catch (Exception)
@@ -252,23 +316,42 @@ namespace DataMan_Scanner
 
                 throw;
             }
-            try 
+            try
             {
-                dataManSystem.ReadStringArrived -= DataManSystem_ReadStringArrived;                
-            } finally 
-            { 
-                dataManSystem.ReadStringArrived += DataManSystem_ReadStringArrived;                
+                dataManSystem.ReadStringArrived -= DataManSystem_ReadStringArrived;
+            }
+            finally
+            {
+                dataManSystem.ReadStringArrived += DataManSystem_ReadStringArrived;
             }
             try
             {
                 dataManSystem.SystemDisconnected -= DataManSystem_SystemDisconnected;
-            }finally
+            }
+            finally
             {
                 dataManSystem.SystemDisconnected += DataManSystem_SystemDisconnected;
+                if (serSystemConnector.IsKeepAliveSupported)
+                {
+                    serSystemConnector.SetKeepAliveOptions(true, 1000, 2000);
+                }
+
+            }
+            try
+            {
+                dataManSystem.SystemWentOffline -= DataManSystem_SystemWentOffline;
+            }
+            finally
+            {
+                dataManSystem.SystemWentOffline += DataManSystem_SystemWentOffline;
             }
             dataManSystem.Connect();
-            this.Text = $"扫码校验【{serSystemConnector.PortName},{serSystemConnector.Baudrate},{serSystemConnector.Parity},{serSystemConnector.DataBits},{serSystemConnector.StopBits}】";
-            
+            this.Invoke(SetFormTitle,$"扫码校验【{serSystemConnector.PortName},{serSystemConnector.Baudrate},{serSystemConnector.Parity},{serSystemConnector.DataBits},{serSystemConnector.StopBits}】");
+
+        }
+        private void DataManSystem_SystemWentOffline(object sender, EventArgs args)
+        {
+            throw new NotImplementedException();
         }
 
         private void DataManSystem_SystemDisconnected(object sender, EventArgs args)
@@ -276,7 +359,7 @@ namespace DataMan_Scanner
             dataManSystem.Disconnect();
             dataManSystem.Dispose();
             dataManSystem = null;
-            this.Text = $"扫码校验";
+            this.Invoke(SetFormTitle, $"扫码校验");
             this.OnFreshScannerList();
         }
 
@@ -341,5 +424,7 @@ namespace DataMan_Scanner
                 storeFile = openFile.FileName;
             }
         }
+
+   
     }
 }
