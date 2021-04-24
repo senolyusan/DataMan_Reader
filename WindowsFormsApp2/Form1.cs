@@ -11,7 +11,6 @@ using Ports = System.IO.Ports;
 using SerialPort = System.IO.Ports.SerialPort;
 using Cognex.DataMan.SDK;
 using Cognex.DataMan.Discovery;
-using System.Windows.Forms;
 
 namespace DataMan_Scanner
 {
@@ -128,7 +127,11 @@ namespace DataMan_Scanner
             {
                 if (this.AutoLoad)
                 {
-
+                    this.checkBox1.Checked = true;
+                }
+                else
+                {
+                    this.checkBox1.Checked = false;
                 }
             }
             
@@ -157,7 +160,7 @@ namespace DataMan_Scanner
                     this.timer1.Stop();
                     DmccResponse dmccResponse = dataManSystem.SendCommand("GET DEVICE.NAME",1000);
                 }                
-                catch(Exception ex)
+                catch(Exception)
                 {   
                     dataManSystem.Disconnect();
                     dataManSystem = null;
@@ -351,7 +354,7 @@ namespace DataMan_Scanner
         }
         private void DataManSystem_SystemWentOffline(object sender, EventArgs args)
         {
-            throw new NotImplementedException();
+
         }
 
         private void DataManSystem_SystemDisconnected(object sender, EventArgs args)
@@ -425,6 +428,10 @@ namespace DataMan_Scanner
             }
         }
 
-   
+        private void checkBox1_CheckedChanged(object sender, EventArgs e)
+        {
+            Properties.Settings.Default.AutoLoad = checkBox1.Checked;
+            this.AutoLoad = checkBox1.Checked;
+        }
     }
 }
