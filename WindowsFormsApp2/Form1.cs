@@ -104,10 +104,19 @@ namespace DataMan_Scanner
             }
 
         }
+        /// <summary>
+        /// 窗体文本设置委托函数
+        /// </summary>
+        /// <param name="title"></param>
         private void setFormTitle(string title)
         {
             this.Text = title;
         }
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Form1_Load(object sender, EventArgs e)
         {
             this.pic_NG.Visible = false;
@@ -147,6 +156,11 @@ namespace DataMan_Scanner
                 serSystemDiscoverer.Discover();
             }
         }
+        /// <summary>
+        /// 定时器周期触发事件处理函数
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Timer1_Tick(object sender, EventArgs e)
         {
             if (dataManSystem == null)
@@ -157,7 +171,9 @@ namespace DataMan_Scanner
             {
                 try
                 {
+                    ///关断定时器，防止重复触发
                     this.timer1.Stop();
+                    ///使用“GET DEVICE.NAME”命令，检测扫码枪是否掉线
                     DmccResponse dmccResponse = dataManSystem.SendCommand("GET DEVICE.NAME",1000);
                 }                
                 catch(Exception)
@@ -172,7 +188,7 @@ namespace DataMan_Scanner
         }
 
 
-        protected override void WndProc(ref Message m)
+/*        protected override void WndProc(ref Message m)
         {
             if(m.Msg ==WM_DEVICECHANGE)
             {
@@ -180,9 +196,9 @@ namespace DataMan_Scanner
                 ;
             }
             base.WndProc(ref m);
-        }
+        }*/
         /// <summary>
-        /// 扫描枪下拉列表
+        /// 扫描枪下拉列表项添加处理函数
         /// </summary>
         /// <param name="obj"></param>
         public void ComBoBoxaddListItem(List<SerSystemDiscoverer.SystemInfo> obj)
@@ -197,13 +213,14 @@ namespace DataMan_Scanner
                 });
         }
         /// <summary>
-        /// 接收结果视图更新
+        /// 扫码结果处理函数
         /// </summary>
         /// <param name="str"></param>
         public void DataGridAddRows(string str)
         {
+            ///文本框显示最新扫码内容
             this.Invoke(SetText, str);
-            string timeStr = DateTime.Now.ToString("yyyy-MM-dd hh:mm:ss");
+            string timeStr = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             if (ScanData.ContainsKey(str))
             {                
                 this.Invoke(DisplayAlert,true);
